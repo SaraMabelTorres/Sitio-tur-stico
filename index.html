@@ -1,0 +1,205 @@
+<!DOCTYPE html>  
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Sitios Turísticos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: rgb(181, 213, 245);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    h1 {
+      color: #007bff;
+      font-weight: 700;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #siteList {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .neu-button {
+      background-color: #e0e0e0;
+      border-radius: 50px;
+      box-shadow: 10px 10px 20px #bebebe, -10px -10px 20px #ffffff;
+      color: #4d4d4d;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 15px 40px;
+      transition: all 0.3s ease-in-out;
+      border: none;
+      margin: 10px;
+    }
+
+    .neu-button:hover {
+      box-shadow: 2px 2px 5px #bebebe, -2px -2px 5px #ffffff;
+    }
+
+    .neu-button:active {
+      box-shadow: inset 2px 2px 5px #bebebe, inset -2px -2px 5px #ffffff;
+    }
+
+    .neu-button:focus {
+      outline: none;
+    }
+
+    .site-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-control, .form-select {
+      box-shadow: inset 5px 5px 10px #cccccc, inset -5px -5px 10px #ffffff;
+      border-radius: 12px;
+      border: none;
+      padding: 10px 15px;
+      transition: box-shadow 0.2s ease-in-out;
+    }
+
+    .form-control:focus, .form-select:focus {
+      box-shadow: inset 3px 3px 6px #cccccc, inset -3px -3px 6px #ffffff;
+    }
+
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .card-text {
+      font-size: 1rem;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">Agregar Sitio Turístico</h1>
+    <form id="touristForm">
+      <div class="mb-3">
+        <label for="country" class="form-label">País</label>
+        <input type="text" class="form-control" id="country" placeholder="Ingrese el país" required>
+        <div class="invalid-feedback">El país es requerido.</div>
+      </div>
+      <div class="mb-3">
+        <label for="place" class="form-label">Lugar Turístico</label>
+        <input type="text" class="form-control" id="place" placeholder="Ingrese el lugar turístico" required>
+        <div class="invalid-feedback">El lugar turístico es requerido.</div>
+      </div>
+      <div class="mb-3">
+        <label for="description" class="form-label">Descripción</label>
+        <textarea class="form-control" id="description" rows="4" placeholder="Ingrese una descripción" required></textarea>
+        <div class="invalid-feedback">La descripción es requerida.</div>
+      </div>
+      <div class="mb-3">
+        <label for="image" class="form-label">Imagen del sitio (opcional)</label>
+        <input type="file" class="form-control" id="image" accept="image/*">
+        <div class="invalid-feedback">Por favor suba una imagen o use una URL.</div>
+      </div>
+      <div class="mb-3">
+        <label for="imageUrl" class="form-label">O URL de la Imagen</label>
+        <input type="url" class="form-control" id="imageUrl" placeholder="Ingrese la URL de la imagen (opcional)">
+        <div class="invalid-feedback">Por favor, ingrese una URL válida.</div>
+      </div>
+      <button type="submit" class="neu-button">Agregar Sitio</button>
+      <button type="reset" class="neu-button">Limpiar Formulario</button>
+      <button type="button" class="neu-button" onclick="cancelarFormulario()">Cancelar</button>
+    </form>
+
+    <div class="mt-5">
+      <h2>Lista de Sitios Turísticos</h2>
+      <div id="siteList" class="mt-3"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("touristForm");
+      const siteList = document.getElementById("siteList");
+
+      form.addEventListener("submit", function(event) {
+        event.preventDefault();
+        
+        // Validación de campos
+        if (!this.checkValidity()) {
+          this.classList.add('was-validated');
+          return;
+        }
+
+        const country = document.getElementById("country").value;
+        const place = document.getElementById("place").value;
+        const description = document.getElementById("description").value;
+        const imageInput = document.getElementById("image");
+        const imageUrlInput = document.getElementById("imageUrl").value;
+
+        let imageSrc = '';
+
+        // Validar si hay archivo de imagen o URL
+        if (imageInput.files.length > 0) {
+          const imageFile = imageInput.files[0];
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            imageSrc = e.target.result;
+            agregarSitio(imageSrc);
+          };
+          reader.readAsDataURL(imageFile);
+        } else if (imageUrlInput && imageUrlInput.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/i)) {
+          imageSrc = imageUrlInput;
+          agregarSitio(imageSrc);
+        } else {
+          alert("Por favor, suba una imagen o ingrese una URL válida.");
+          return;
+        }
+
+        function agregarSitio(imageSrc) {
+          // Crear un nuevo sitio turístico
+          const siteCard = document.createElement("div");
+          siteCard.className = "card mb-3";
+          siteCard.innerHTML = `
+            <div class="card-body">
+              <h5 class="card-title">${place} - ${country}</h5>
+              <p class="card-text">${description}</p>
+              <img src="${imageSrc}" alt="Imagen de ${place}" class="site-image mt-3">
+              <button class="neu-button mt-3" onclick="eliminarSitio(this)">Eliminar Sitio</button>
+            </div>
+          `;
+
+          siteList.appendChild(siteCard);
+
+          // Resetear formulario
+          form.reset();
+          form.classList.remove('was-validated');
+        }
+      });
+    });
+
+    function eliminarSitio(button) {
+      const siteCard = button.closest(".card");
+      siteCard.remove();
+    }
+
+    function cancelarFormulario() {
+      const form = document.getElementById("touristForm");
+      form.reset();
+      form.classList.remove('was-validated');
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
